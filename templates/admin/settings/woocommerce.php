@@ -1,3 +1,4 @@
+<?php if (!defined('ABSPATH')) exit; ?>
 <div class="wrap">
     <h1><?php esc_html_e('WooCommerce Integration', 'clubcore'); ?></h1>
 

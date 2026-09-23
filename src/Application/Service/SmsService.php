@@ -10,7 +10,7 @@ use ClubCore\Domain\Exception\SmsException;
 use ClubCore\Infrastructure\Pattern\PatternParser;
 use ClubCore\Infrastructure\Pattern\VariableRegistry;
 use ClubCore\Domain\Contract\AuditLoggerInterface;
-use ClubCore\Domain\Model\Member;
+use ClubCore\Domain\Entity\Member;
 
 class SmsService
 {

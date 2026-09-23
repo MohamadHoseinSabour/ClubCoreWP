@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace ClubCore\Infrastructure\WooCommerce;
 
-use ClubCore\Domain\Model\Member;
+use ClubCore\Domain\Entity\Member;
 
 /**
  * Matches ClubCore members with WooCommerce customers and retrieves stats/orders.

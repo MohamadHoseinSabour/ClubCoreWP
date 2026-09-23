@@ -20,7 +20,7 @@ use ClubCore\Infrastructure\Sms\MelipayamakProvider;
 use ClubCore\Infrastructure\WooCommerce\CustomerMatcher;
 use ClubCore\Infrastructure\WooCommerce\WooCommerceDetector;
 use ClubCore\Infrastructure\WooCommerce\WooCommerceIntegration;
-use ClubCore\Infrastructure\WordPress\AdminBootstrap;
+use ClubCore\Presentation\Admin\AdminBootstrap;
 use ClubCore\Infrastructure\WordPress\AuditLogRepository;
 use ClubCore\Infrastructure\WordPress\CapabilityManager;
 use ClubCore\Infrastructure\WordPress\MemberRepository;
@@ -128,7 +128,7 @@ class Plugin
         $this->wcService = new WooCommerceService($this->wcDetector, $customerMatcher);
 
         if ($this->wcDetector->isActive()) {
-            $wcIntegration = new WooCommerceIntegration($this->wcDetector, $customerMatcher);
+            $wcIntegration = new WooCommerceIntegration($this->wcDetector, $this->createMemberUseCase);
             $wcIntegration->init();
         }
 

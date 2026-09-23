@@ -1,25 +1,33 @@
 <?php
+
+declare(strict_types=1);
+
 namespace ClubCore\Infrastructure\WordPress;
 
 /**
  * Manages database migrations and tables.
+ *
+ * @package ClubCore\Infrastructure\WordPress
  */
-class MigrationManager {
+class MigrationManager
+{
     public const SCHEMA_VERSION = '1.0.0';
 
     /**
      * Run initial installation routines.
      */
-    public static function install(): void {
+    public static function install(): void
+    {
         self::createTables();
     }
 
     /**
      * Checks if migrations are needed and runs them.
      */
-    public static function checkAndMigrate(): void {
-        $current_version = get_option('clubcore_db_version', '0.0.0');
-        if (version_compare($current_version, self::SCHEMA_VERSION, '<')) {
+    public static function checkAndMigrate(): void
+    {
+        $currentVersion = get_option('clubcore_db_version', '0.0.0');
+        if (version_compare((string) $currentVersion, self::SCHEMA_VERSION, '<')) {
             self::install();
             update_option('clubcore_db_version', self::SCHEMA_VERSION);
         }
@@ -27,99 +35,105 @@ class MigrationManager {
 
     /**
      * Creates or updates the database tables using dbDelta.
+     * Follows strict dbDelta syntax rules (PRIMARY KEY  (id) with two spaces).
      */
-    private static function createTables(): void {
+    private static function createTables(): void
+    {
         global $wpdb;
-        $charset_collate = $wpdb->get_charset_collate();
-        
+        $charsetCollate = $wpdb->get_charset_collate();
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         $prefix = $wpdb->prefix;
 
-        $sql_members = "CREATE TABLE {$prefix}clubcore_members (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            user_id BIGINT UNSIGNED DEFAULT 0,
-            phone_normalized VARCHAR(20) NOT NULL,
-            phone_display VARCHAR(30) DEFAULT '',
-            first_name VARCHAR(100) DEFAULT '',
-            last_name VARCHAR(100) DEFAULT '',
-            email VARCHAR(200) DEFAULT '',
-            membership_status VARCHAR(30) DEFAULT 'active',
-            membership_source VARCHAR(30) DEFAULT 'admin',
-            membership_created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            membership_created_at_gmt DATETIME DEFAULT CURRENT_TIMESTAMP,
-            created_by BIGINT UNSIGNED DEFAULT 0,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            updated_at_gmt DATETIME DEFAULT CURRENT_TIMESTAMP,
-            last_sms_status VARCHAR(30) DEFAULT '',
-            last_sms_sent_at DATETIME DEFAULT NULL,
-            woocommerce_linked TINYINT(1) DEFAULT 0,
+        $sqlMembers = "CREATE TABLE {$prefix}clubcore_members (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) unsigned DEFAULT 0,
+            phone_normalized varchar(20) NOT NULL,
+            phone_display varchar(30) DEFAULT '',
+            first_name varchar(100) DEFAULT '',
+            last_name varchar(100) DEFAULT '',
+            email varchar(200) DEFAULT '',
+            membership_status varchar(30) DEFAULT 'active',
+            membership_source varchar(30) DEFAULT 'admin',
+            membership_created_at datetime DEFAULT '0000-00-00 00:00:00',
+            membership_created_at_gmt datetime DEFAULT '0000-00-00 00:00:00',
+            created_by bigint(20) unsigned DEFAULT 0,
+            updated_at datetime DEFAULT '0000-00-00 00:00:00',
+            updated_at_gmt datetime DEFAULT '0000-00-00 00:00:00',
+            last_sms_status varchar(30) DEFAULT '',
+            last_sms_sent_at datetime DEFAULT NULL,
+            woocommerce_linked tinyint(1) DEFAULT 0,
+            PRIMARY KEY  (id),
             UNIQUE KEY phone_normalized (phone_normalized),
             KEY user_id (user_id),
             KEY membership_status (membership_status),
             KEY membership_created_at (membership_created_at)
-        ) $charset_collate;";
+        ) $charsetCollate;";
 
-        $sql_sms_logs = "CREATE TABLE {$prefix}clubcore_sms_logs (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            member_id BIGINT UNSIGNED DEFAULT 0,
-            user_id BIGINT UNSIGNED DEFAULT 0,
-            phone VARCHAR(20) NOT NULL,
-            pattern_id VARCHAR(50) DEFAULT '',
-            provider VARCHAR(50) DEFAULT '',
-            request_type VARCHAR(30) DEFAULT 'welcome',
-            status VARCHAR(30) DEFAULT 'pending',
-            provider_reference VARCHAR(100) DEFAULT '',
-            provider_error_code VARCHAR(30) DEFAULT '',
-            provider_error_message TEXT DEFAULT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            created_by BIGINT UNSIGNED DEFAULT 0,
+        $sqlSmsLogs = "CREATE TABLE {$prefix}clubcore_sms_logs (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            member_id bigint(20) unsigned DEFAULT 0,
+            user_id bigint(20) unsigned DEFAULT 0,
+            phone varchar(20) NOT NULL,
+            pattern_id varchar(50) DEFAULT '',
+            provider varchar(50) DEFAULT '',
+            request_type varchar(30) DEFAULT 'welcome',
+            status varchar(30) DEFAULT 'pending',
+            provider_reference varchar(100) DEFAULT '',
+            provider_error_code varchar(30) DEFAULT '',
+            provider_error_message text DEFAULT NULL,
+            created_at datetime DEFAULT '0000-00-00 00:00:00',
+            created_by bigint(20) unsigned DEFAULT 0,
+            PRIMARY KEY  (id),
             KEY member_id (member_id),
             KEY phone (phone),
             KEY request_type (request_type),
             KEY status (status),
             KEY created_at (created_at)
-        ) $charset_collate;";
+        ) $charsetCollate;";
 
-        $sql_audit_logs = "CREATE TABLE {$prefix}clubcore_audit_logs (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            actor_user_id BIGINT UNSIGNED DEFAULT 0,
-            action VARCHAR(100) NOT NULL,
-            object_type VARCHAR(50) DEFAULT '',
-            object_id BIGINT UNSIGNED DEFAULT 0,
-            result VARCHAR(30) DEFAULT 'success',
-            context TEXT DEFAULT NULL,
-            ip_hash VARCHAR(64) DEFAULT '',
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        $sqlAuditLogs = "CREATE TABLE {$prefix}clubcore_audit_logs (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            actor_user_id bigint(20) unsigned DEFAULT 0,
+            action varchar(100) NOT NULL,
+            object_type varchar(50) DEFAULT '',
+            object_id bigint(20) unsigned DEFAULT 0,
+            result varchar(30) DEFAULT 'success',
+            context text DEFAULT NULL,
+            ip_hash varchar(64) DEFAULT '',
+            created_at datetime DEFAULT '0000-00-00 00:00:00',
+            PRIMARY KEY  (id),
             KEY actor_user_id (actor_user_id),
             KEY action (action),
             KEY object_type (object_type),
             KEY created_at (created_at)
-        ) $charset_collate;";
+        ) $charsetCollate;";
 
-        $sql_import_jobs = "CREATE TABLE {$prefix}clubcore_import_jobs (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            created_by BIGINT UNSIGNED DEFAULT 0,
-            file_name VARCHAR(255) DEFAULT '',
-            source_type VARCHAR(30) DEFAULT 'csv',
-            status VARCHAR(30) DEFAULT 'pending',
-            total_rows INT UNSIGNED DEFAULT 0,
-            processed_rows INT UNSIGNED DEFAULT 0,
-            success_rows INT UNSIGNED DEFAULT 0,
-            failed_rows INT UNSIGNED DEFAULT 0,
-            skipped_rows INT UNSIGNED DEFAULT 0,
-            send_sms TINYINT(1) DEFAULT 0,
-            import_mode VARCHAR(30) DEFAULT 'skip_duplicates',
-            error_summary TEXT DEFAULT NULL,
-            started_at DATETIME DEFAULT NULL,
-            completed_at DATETIME DEFAULT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        $sqlImportJobs = "CREATE TABLE {$prefix}clubcore_import_jobs (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            created_by bigint(20) unsigned DEFAULT 0,
+            file_name varchar(255) DEFAULT '',
+            source_type varchar(30) DEFAULT 'csv',
+            status varchar(30) DEFAULT 'pending',
+            total_rows int(10) unsigned DEFAULT 0,
+            processed_rows int(10) unsigned DEFAULT 0,
+            success_rows int(10) unsigned DEFAULT 0,
+            failed_rows int(10) unsigned DEFAULT 0,
+            skipped_rows int(10) unsigned DEFAULT 0,
+            send_sms tinyint(1) DEFAULT 0,
+            import_mode varchar(30) DEFAULT 'skip_duplicates',
+            error_summary text DEFAULT NULL,
+            started_at datetime DEFAULT NULL,
+            completed_at datetime DEFAULT NULL,
+            created_at datetime DEFAULT '0000-00-00 00:00:00',
+            PRIMARY KEY  (id),
             KEY status (status)
-        ) $charset_collate;";
+        ) $charsetCollate;";
 
-        dbDelta($sql_members);
-        dbDelta($sql_sms_logs);
-        dbDelta($sql_audit_logs);
-        dbDelta($sql_import_jobs);
+        dbDelta($sqlMembers);
+        dbDelta($sqlSmsLogs);
+        dbDelta($sqlAuditLogs);
+        dbDelta($sqlImportJobs);
     }
 }

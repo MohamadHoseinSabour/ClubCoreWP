@@ -5,7 +5,7 @@ namespace ClubCore\Application\Service;
 
 use ClubCore\Infrastructure\WooCommerce\WooCommerceDetector;
 use ClubCore\Infrastructure\WooCommerce\CustomerMatcher;
-use ClubCore\Domain\Model\Member;
+use ClubCore\Domain\Entity\Member;
 
 /**
  * Service for interacting with WooCommerce data from the application layer.
