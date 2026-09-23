@@ -20,24 +20,30 @@ define('CLUBCORE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CLUBCORE_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('CLUBCORE_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
-// PHP Version Check
+// 1. PHP Version Check (Graceful early exit before loading any PHP 8.1 code)
 if (version_compare(PHP_VERSION, '8.1', '<')) {
     add_action('admin_notices', function () {
-        echo '<div class="error"><p>' . esc_html__('ClubCore requires PHP 8.1 or higher.', 'clubcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p><strong>ClubCore:</strong> ' .
+            sprintf(
+                esc_html__('این افزونه نیازمند PHP نسخه ۸.۱ یا بالاتر است. نسخه فعلی سرور شما: %s می‌باشد. لطفاً از طریق هاست نسخه PHP را به ۸.۱ یا ۸.۲ ارتقا دهید.', 'clubcore'),
+                esc_html(PHP_VERSION)
+            ) . '</p></div>';
     });
     return;
 }
 
-// WordPress Version Check
+// 2. WordPress Version Check
 global $wp_version;
 if (isset($wp_version) && version_compare($wp_version, '6.4', '<')) {
     add_action('admin_notices', function () {
-        echo '<div class="error"><p>' . esc_html__('ClubCore requires WordPress 6.4 or higher.', 'clubcore') . '</p></div>';
+        echo '<div class="notice notice-error"><p><strong>ClubCore:</strong> ' .
+            esc_html__('این افزونه نیازمند وردپرس نسخه ۶.۴ یا بالاتر است.', 'clubcore') .
+            '</p></div>';
     });
     return;
 }
 
-// 1. Built-in PSR-4 Autoloader for ClubCore classes (Works 100% without composer)
+// 3. Built-in PSR-4 Autoloader for ClubCore classes
 spl_autoload_register(function ($class) {
     $prefix = 'ClubCore\\';
     $baseDir = CLUBCORE_PLUGIN_DIR . 'src/';
@@ -55,28 +61,41 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// 2. Load Composer Autoloader if available (for third-party libraries like PhpSpreadsheet)
+// 4. Load Composer Autoloader if present (for optional PhpSpreadsheet)
 if (file_exists(CLUBCORE_PLUGIN_DIR . 'vendor/autoload.php')) {
     require_once CLUBCORE_PLUGIN_DIR . 'vendor/autoload.php';
 }
 
-// 3. Declare WooCommerce HPOS Compatibility
+// 5. Declare WooCommerce HPOS Compatibility
 add_action('before_woocommerce_init', function () {
     if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
         \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true);
     }
 });
 
-// 4. Activation & Deactivation Hooks
-register_activation_hook(__FILE__, ['ClubCore\Infrastructure\WordPress\Activator', 'activate']);
-register_deactivation_hook(__FILE__, ['ClubCore\Infrastructure\WordPress\Deactivator', 'deactivate']);
+// 6. Activation & Deactivation Hooks
+register_activation_hook(__FILE__, function () {
+    try {
+        \ClubCore\Infrastructure\WordPress\Activator::activate();
+    } catch (\Throwable $e) {
+        update_option('clubcore_activation_error', $e->getMessage());
+    }
+});
 
-// 5. Add "Settings" link in WordPress Plugins List
+register_deactivation_hook(__FILE__, function () {
+    try {
+        \ClubCore\Infrastructure\WordPress\Deactivator::deactivate();
+    } catch (\Throwable $e) {
+        // Silent
+    }
+});
+
+// 7. Add "Settings" link in WordPress Plugins list
 add_filter('plugin_action_links_' . CLUBCORE_PLUGIN_BASENAME, function ($links) {
     $slug = get_option('clubcore_admin_page_slug', 'customer-club');
     $settingsUrl = admin_url('admin.php?page=' . $slug . '-settings');
     $settingsLink = sprintf(
-        '<a href="%s" style="font-weight:600;">%s</a>',
+        '<a href="%s" style="font-weight:600; color:#2271b1;">%s</a>',
         esc_url($settingsUrl),
         esc_html__('تنظیمات', 'clubcore')
     );
@@ -84,8 +103,27 @@ add_filter('plugin_action_links_' . CLUBCORE_PLUGIN_BASENAME, function ($links) 
     return $links;
 });
 
-// 6. Bootstrap Plugin
+// 8. Self-healing capabilities on admin_init (User is guaranteed to be authenticated)
+add_action('admin_init', function () {
+    if (class_exists(\ClubCore\Infrastructure\WordPress\CapabilityManager::class)) {
+        \ClubCore\Infrastructure\WordPress\CapabilityManager::ensureAdminCapabilities();
+    }
+});
+
+// 9. Safe Bootstrap: Protects entire site from crashing (Zero Downtime / Error Trap)
 add_action('plugins_loaded', function () {
-    \ClubCore\Infrastructure\WordPress\CapabilityManager::ensureAdminCapabilities();
-    \ClubCore\Plugin::init();
+    try {
+        \ClubCore\Plugin::init();
+    } catch (\Throwable $e) {
+        add_action('admin_notices', function () use ($e) {
+            echo '<div class="notice notice-error is-dismissible">';
+            echo '<p><strong>خطای افزونه باشگاه مشتریان (ClubCore):</strong> ' . esc_html($e->getMessage()) . '</p>';
+            echo '<p><small>در فایل: <code>' . esc_html($e->getFile()) . '</code> در خط <strong>' . (int)$e->getLine() . '</strong></small></p>';
+            echo '</div>';
+        });
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log(sprintf('ClubCore Error: %s in %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()));
+        }
+    }
 });

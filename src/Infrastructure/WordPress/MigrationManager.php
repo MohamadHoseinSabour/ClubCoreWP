@@ -22,10 +22,14 @@ class MigrationManager
     }
 
     /**
-     * Checks if migrations are needed and runs them.
+     * Checks if migrations are needed and runs them (admin only).
      */
     public static function checkAndMigrate(): void
     {
+        if (!is_admin()) {
+            return;
+        }
+
         $currentVersion = get_option('clubcore_db_version', '0.0.0');
         if (version_compare((string) $currentVersion, self::SCHEMA_VERSION, '<')) {
             self::install();
@@ -35,7 +39,7 @@ class MigrationManager
 
     /**
      * Creates or updates the database tables using dbDelta.
-     * Follows strict dbDelta syntax rules (PRIMARY KEY  (id) with two spaces).
+     * Compatible with MySQL 5.7+, MySQL 8.0+ and strict modes (NO_ZERO_DATE).
      */
     private static function createTables(): void
     {
@@ -56,11 +60,11 @@ class MigrationManager
             email varchar(200) DEFAULT '',
             membership_status varchar(30) DEFAULT 'active',
             membership_source varchar(30) DEFAULT 'admin',
-            membership_created_at datetime DEFAULT '0000-00-00 00:00:00',
-            membership_created_at_gmt datetime DEFAULT '0000-00-00 00:00:00',
+            membership_created_at datetime DEFAULT NULL,
+            membership_created_at_gmt datetime DEFAULT NULL,
             created_by bigint(20) unsigned DEFAULT 0,
-            updated_at datetime DEFAULT '0000-00-00 00:00:00',
-            updated_at_gmt datetime DEFAULT '0000-00-00 00:00:00',
+            updated_at datetime DEFAULT NULL,
+            updated_at_gmt datetime DEFAULT NULL,
             last_sms_status varchar(30) DEFAULT '',
             last_sms_sent_at datetime DEFAULT NULL,
             woocommerce_linked tinyint(1) DEFAULT 0,
@@ -83,7 +87,7 @@ class MigrationManager
             provider_reference varchar(100) DEFAULT '',
             provider_error_code varchar(30) DEFAULT '',
             provider_error_message text DEFAULT NULL,
-            created_at datetime DEFAULT '0000-00-00 00:00:00',
+            created_at datetime DEFAULT NULL,
             created_by bigint(20) unsigned DEFAULT 0,
             PRIMARY KEY  (id),
             KEY member_id (member_id),
@@ -102,7 +106,7 @@ class MigrationManager
             result varchar(30) DEFAULT 'success',
             context text DEFAULT NULL,
             ip_hash varchar(64) DEFAULT '',
-            created_at datetime DEFAULT '0000-00-00 00:00:00',
+            created_at datetime DEFAULT NULL,
             PRIMARY KEY  (id),
             KEY actor_user_id (actor_user_id),
             KEY action (action),
@@ -126,7 +130,7 @@ class MigrationManager
             error_summary text DEFAULT NULL,
             started_at datetime DEFAULT NULL,
             completed_at datetime DEFAULT NULL,
-            created_at datetime DEFAULT '0000-00-00 00:00:00',
+            created_at datetime DEFAULT NULL,
             PRIMARY KEY  (id),
             KEY status (status)
         ) $charsetCollate;";
