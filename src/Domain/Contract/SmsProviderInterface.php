@@ -19,14 +19,14 @@ interface SmsProviderInterface
      * Send a pattern-based SMS.
      *
      * @param string               $to       Recipient phone number (canonical format).
-     * @param int|string           $bodyId   Pattern/template ID.
-     * @param array<string, string> $variables Variable name-value pairs.
+     * @param string|int           $patternCode Pattern/template ID.
+     * @param array<string, string> $variables   Variable name-value pairs.
      *
      * @return SmsResult
      *
      * @throws \ClubCore\Domain\Exception\SmsException On send failure.
      */
-    public function sendPattern(string $to, int|string $bodyId, array $variables): SmsResult;
+    public function sendPattern(string $to, string|int $patternCode, array $variables = []): SmsResult;
 
     /**
      * Check account credit/balance.

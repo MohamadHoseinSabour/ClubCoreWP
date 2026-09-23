@@ -24,14 +24,15 @@ class MelipayamakProvider implements SmsProviderInterface
         $this->errorMapper = new SmsErrorMapper();
     }
 
-    public function sendPattern(string $to, string $patternCode, array $variables = []): SmsResult
+    public function sendPattern(string $to, string|int $patternCode, array $variables = []): SmsResult
     {
         $startTime = microtime(true);
+        $patternCodeStr = (string) $patternCode;
         try {
             if ($this->apiToken !== '') {
-                return $this->sendConsole($to, $patternCode, $variables, $startTime);
+                return $this->sendConsole($to, $patternCodeStr, $variables, $startTime);
             }
-            return $this->sendClassic($to, $patternCode, $variables, $startTime);
+            return $this->sendClassic($to, $patternCodeStr, $variables, $startTime);
         } catch (SmsException $e) {
             return SmsResult::failure($e->getMessage(), $e->getProviderErrorCode(), $e->getType());
         }

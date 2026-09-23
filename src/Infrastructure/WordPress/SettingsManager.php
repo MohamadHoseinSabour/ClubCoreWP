@@ -57,11 +57,15 @@ class SettingsManager
 
     public function registerSettings(): void
     {
-        // General
+        // General & Terminal
         register_setting('clubcore_general_settings', 'clubcore_admin_menu_title', ['sanitize_callback' => 'sanitize_text_field']);
         register_setting('clubcore_general_settings', 'clubcore_admin_page_slug', ['sanitize_callback' => 'sanitize_title']);
         register_setting('clubcore_general_settings', 'clubcore_admin_menu_icon', ['sanitize_callback' => 'sanitize_text_field']);
         register_setting('clubcore_general_settings', 'clubcore_admin_menu_position', ['sanitize_callback' => 'absint']);
+        register_setting('clubcore_general_settings', 'clubcore_terminal_title', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('clubcore_general_settings', 'clubcore_terminal_slug', ['sanitize_callback' => 'sanitize_title']);
+        register_setting('clubcore_general_settings', 'clubcore_terminal_pin', ['sanitize_callback' => 'sanitize_text_field']);
+        register_setting('clubcore_general_settings', 'clubcore_terminal_require_pin', ['sanitize_callback' => 'sanitize_text_field']);
 
         // SMS
         register_setting('clubcore_sms_settings', 'clubcore_sms_provider', ['sanitize_callback' => 'sanitize_text_field']);

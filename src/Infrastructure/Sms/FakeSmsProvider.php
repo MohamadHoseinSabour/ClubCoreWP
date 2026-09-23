@@ -26,11 +26,11 @@ class FakeSmsProvider implements SmsProviderInterface
         $this->errorType = $errorType;
     }
 
-    public function sendPattern(string $to, string $patternCode, array $variables = []): SmsResult
+    public function sendPattern(string $to, string|int $patternCode, array $variables = []): SmsResult
     {
         $this->sentMessages[] = [
             'to' => $to,
-            'patternCode' => $patternCode,
+            'patternCode' => (string) $patternCode,
             'variables' => $variables,
             'time' => time(),
         ];

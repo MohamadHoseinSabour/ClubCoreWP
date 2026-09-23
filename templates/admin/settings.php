@@ -22,6 +22,8 @@ $tabs = [
     'advanced'      => __( 'پیشرفته', 'clubcore' ),
 ];
 
+$page_slug = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : ( get_option( 'clubcore_admin_page_slug', 'customer-club' ) . '-settings' );
+
 ?>
 <div class="wrap clubcore-wrap">
     <h1 class="wp-heading-inline"><?php esc_html_e( 'تنظیمات افزونه', 'clubcore' ); ?></h1>
@@ -29,7 +31,7 @@ $tabs = [
 
     <h2 class="nav-tab-wrapper">
         <?php foreach ( $tabs as $tab_key => $tab_name ) : ?>
-            <a href="?page=clubcore-settings&tab=<?php echo esc_attr( $tab_key ); ?>" class="nav-tab <?php echo $active_tab === $tab_key ? 'nav-tab-active' : ''; ?>">
+            <a href="?page=<?php echo esc_attr( $page_slug ); ?>&tab=<?php echo esc_attr( $tab_key ); ?>" class="nav-tab <?php echo $active_tab === $tab_key ? 'nav-tab-active' : ''; ?>">
                 <?php echo esc_html( $tab_name ); ?>
             </a>
         <?php endforeach; ?>

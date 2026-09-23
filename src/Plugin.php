@@ -28,6 +28,8 @@ use ClubCore\Infrastructure\WordPress\MigrationManager;
 use ClubCore\Infrastructure\WordPress\SettingsManager;
 use ClubCore\Infrastructure\WordPress\SmsLogRepository;
 
+use ClubCore\Presentation\Terminal\TerminalManager;
+
 /**
  * Main Plugin Container and Lifecycle Coordinator.
  *
@@ -49,6 +51,7 @@ class Plugin
     private WooCommerceDetector $wcDetector;
     private WooCommerceService $wcService;
     private SettingsManager $settingsManager;
+    private TerminalManager $terminalManager;
 
     private function __construct() {}
 
@@ -99,9 +102,9 @@ class Plugin
         // 5. Domain Services & Use Cases
         $this->smsService = new SmsService(
             provider: $this->smsProvider,
-            patternParser: $this->patternParser,
-            variableRegistry: $this->variableRegistry,
-            smsLogRepository: $this->smsLogRepository,
+            parser: $this->patternParser,
+            registry: $this->variableRegistry,
+            logRepository: $this->smsLogRepository,
             auditLogger: $this->auditLogger
         );
 
@@ -132,13 +135,20 @@ class Plugin
             $wcIntegration->init();
         }
 
-        // 8. Admin UI
+        // 8. Kiosk / Mobile POS Terminal
+        $this->terminalManager = new TerminalManager(
+            $this->createMemberUseCase,
+            $this->smsService
+        );
+        $this->terminalManager->init();
+
+        // 9. Admin UI
         if (is_admin()) {
             $admin = new \ClubCore\Presentation\Admin\AdminBootstrap();
             $admin->init();
         }
 
-        // 9. Register Export / Template Download action hooks
+        // 10. Register Export / Template Download action hooks
         add_action('admin_post_clubcore_export_members', [$this, 'handleExportRequest']);
         add_action('admin_post_clubcore_download_template', [$this, 'handleDownloadTemplateRequest']);
     }
@@ -153,6 +163,7 @@ class Plugin
     public function getCreateMemberUseCase(): CreateMemberUseCase { return $this->createMemberUseCase; }
     public function getImportService(): ImportService { return $this->importService; }
     public function getWooCommerceService(): WooCommerceService { return $this->wcService; }
+    public function getTerminalManager(): TerminalManager { return $this->terminalManager; }
     public function getVersion(): string { return defined('CLUBCORE_VERSION') ? CLUBCORE_VERSION : '1.0.0'; }
 
     // ─── Direct Admin POST Handlers ─────────────────────────
