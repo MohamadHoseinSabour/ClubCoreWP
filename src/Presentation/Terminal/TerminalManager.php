@@ -33,14 +33,18 @@ class TerminalManager
         // 1. Rewrite rule & Query var
         add_action('init', [$this, 'registerRewriteRules']);
         add_filter('query_vars', [$this, 'registerQueryVars']);
+        add_filter('request', [$this, 'filterRequest']);
 
-        // 2. Template redirect for standalone Kiosk UI
-        add_action('template_redirect', [$this, 'handleTerminalTemplate']);
+        // 2. Automatically flush rewrite rules when slug is changed in settings
+        add_action('update_option_clubcore_terminal_slug', [$this, 'onSlugChanged'], 10, 2);
 
-        // 3. Shortcode [clubcore_terminal]
+        // 3. Template redirect for standalone Kiosk UI
+        add_action('template_redirect', [$this, 'handleTerminalTemplate'], 1);
+
+        // 4. Shortcode [clubcore_terminal]
         add_shortcode('clubcore_terminal', [$this, 'renderShortcode']);
 
-        // 4. AJAX Handlers (both logged-in and authorized terminal sessions)
+        // 5. AJAX Handlers (both logged-in and authorized terminal sessions)
         add_action('wp_ajax_clubcore_terminal_register', [$this, 'handleRegister']);
         add_action('wp_ajax_nopriv_clubcore_terminal_register', [$this, 'handleRegister']);
 
@@ -50,7 +54,7 @@ class TerminalManager
         add_action('wp_ajax_clubcore_terminal_stats', [$this, 'handleGetStats']);
         add_action('wp_ajax_nopriv_clubcore_terminal_stats', [$this, 'handleGetStats']);
 
-        // 5. Admin Bar quick launcher
+        // 6. Admin Bar quick launcher
         add_action('admin_bar_menu', [$this, 'addAdminBarMenu'], 100);
     }
 
@@ -64,6 +68,47 @@ class TerminalManager
     {
         $vars[] = 'clubcore_terminal';
         return $vars;
+    }
+
+    public function filterRequest(array $queryVars): array
+    {
+        if ($this->isTerminalRequest()) {
+            $queryVars['clubcore_terminal'] = '1';
+        }
+        return $queryVars;
+    }
+
+    public function onSlugChanged($oldValue, $newValue): void
+    {
+        if ($oldValue !== $newValue) {
+            $this->registerRewriteRules();
+            flush_rewrite_rules(false);
+        }
+    }
+
+    public function isTerminalRequest(): bool
+    {
+        // Direct query var or GET param
+        if (get_query_var('clubcore_terminal') || isset($_GET['clubcore_terminal'])) {
+            return true;
+        }
+
+        // Direct URI matching (prevents 404 even if permalinks are not flushed yet)
+        if (!empty($_SERVER['REQUEST_URI'])) {
+            $requestPath = trim((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+            $homePath = trim((string) parse_url(home_url(), PHP_URL_PATH), '/');
+
+            if ($homePath !== '' && str_starts_with($requestPath, $homePath)) {
+                $requestPath = trim(substr($requestPath, strlen($homePath)), '/');
+            }
+
+            $slug = $this->getTerminalSlug();
+            if ($requestPath === $slug || $requestPath === $slug . '/') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function getTerminalSlug(): string
@@ -82,12 +127,21 @@ class TerminalManager
 
     public function handleTerminalTemplate(): void
     {
-        $isTerminal = (bool) get_query_var('clubcore_terminal') || isset($_GET['clubcore_terminal']);
-        if (!$isTerminal) {
+        if (!$this->isTerminalRequest()) {
             return;
         }
 
-        // Send headers
+        // Prevent WordPress 404 header and status
+        global $wp_query;
+        if ($wp_query instanceof \WP_Query) {
+            $wp_query->is_404 = false;
+            $wp_query->is_page = false;
+            $wp_query->is_single = false;
+            $wp_query->is_home = false;
+            $wp_query->is_archive = false;
+        }
+
+        // Send 200 OK headers
         status_header(200);
         nocache_headers();
 
