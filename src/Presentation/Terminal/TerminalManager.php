@@ -131,6 +131,25 @@ class TerminalManager
             return;
         }
 
+        // 1. Access Enforcement for non-admins and unauthorized roles
+        if (is_user_logged_in()) {
+            if (!$this->isAuthorized()) {
+                // Logged-in non-admin or unauthorized user (e.g. subscriber, customer)
+                $this->renderAccessDeniedPage();
+                exit;
+            }
+        } else {
+            // Guest / Not logged in
+            $guestMode = (string) get_option('clubcore_terminal_guest_mode', 'login_required');
+            $requirePin = (bool) get_option('clubcore_terminal_require_pin', '0');
+
+            // If login is required and PIN bypass mode is disabled, redirect to login
+            if ($guestMode === 'login_required' && !$requirePin) {
+                wp_safe_redirect(wp_login_url($this->getTerminalUrl()));
+                exit;
+            }
+        }
+
         // Prevent WordPress 404 header and status
         global $wp_query;
         if ($wp_query instanceof \WP_Query) {
@@ -153,8 +172,141 @@ class TerminalManager
         }
     }
 
+    public function renderAccessDeniedPage(): void
+    {
+        status_header(403);
+        nocache_headers();
+
+        $user = wp_get_current_user();
+        $userRoleNames = [];
+        if (!empty($user->roles)) {
+            $allRoles = wp_roles()->get_names();
+            foreach ($user->roles as $roleKey) {
+                $userRoleNames[] = $allRoles[$roleKey] ?? $roleKey;
+            }
+        }
+        $roleDisplay = !empty($userRoleNames) ? implode('، ', $userRoleNames) : __('کاربر عادی', 'clubcore');
+        $siteName = get_bloginfo('name') ?: __('باشگاه مشتریان', 'clubcore');
+
+        echo '<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>' . esc_html__('عدم دسترسی به دستگاه ثبت مشتری', 'clubcore') . '</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+    <style>
+        body {
+            font-family: "Vazirmatn", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #090d16;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            direction: rtl;
+        }
+        .access-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 20px;
+            max-width: 480px;
+            width: 100%;
+            padding: 36px 28px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+        .icon {
+            font-size: 54px;
+            margin-bottom: 16px;
+            line-height: 1;
+        }
+        h1 {
+            font-size: 20px;
+            color: #f87171;
+            margin: 0 0 14px;
+            font-weight: 700;
+        }
+        p {
+            font-size: 14.5px;
+            color: #94a3b8;
+            line-height: 1.8;
+            margin: 0 0 20px;
+        }
+        .user-badge {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #cbd5e1;
+            display: inline-block;
+            margin-bottom: 24px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+        }
+        .btn-secondary:hover {
+            background: #334155;
+            color: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+    <div class="access-card">
+        <div class="icon">🔒</div>
+        <h1>' . esc_html__('عدم دسترسی به دستگاه ثبت مشتری', 'clubcore') . '</h1>
+        <p>' . esc_html__('صفحه دستگاه لمسی ثبت مشتری صرفاً برای مدیران و نقش‌های مجاز تنظیم شده است و کاربران عادی به آن دسترسی ندارند.', 'clubcore') . '</p>
+        <div class="user-badge">
+            ' . esc_html__('نقش کاربری فعلی شما:', 'clubcore') . ' <strong>' . esc_html($roleDisplay) . '</strong>
+        </div>
+        <div class="btn-group">
+            <a href="' . esc_url(wp_logout_url($this->getTerminalUrl())) . '" class="btn btn-primary">' . esc_html__('خروج و ورود با حساب مدیر', 'clubcore') . '</a>
+            <a href="' . esc_url(home_url('/')) . '" class="btn btn-secondary">' . esc_html__('بازگشت به سایت', 'clubcore') . '</a>
+        </div>
+    </div>
+</body>
+</html>';
+    }
+
     public function renderShortcode(): string
     {
+        if (!$this->isAuthorized()) {
+            return '<div class="clubcore-notice clubcore-notice-error" style="padding:16px; background:#fef2f2; color:#991b1b; border:1px solid #fecaca; border-radius:8px; text-align:center; font-family:sans-serif; margin:20px 0;">' .
+                esc_html__('شما مجوز دسترسی به دستگاه ثبت مشتری را ندارید. دسترسی به این بخش مختص مدیران و نقش‌های مجاز است.', 'clubcore') .
+                '</div>';
+        }
+
         ob_start();
         $templatePath = CLUBCORE_PLUGIN_DIR . 'templates/terminal/kiosk.php';
         if (file_exists($templatePath)) {
@@ -168,22 +320,42 @@ class TerminalManager
     {
         // 1. Logged in user with any cashier or admin permissions
         if (is_user_logged_in()) {
-            if (current_user_can('clubcore_add_members') || current_user_can('manage_options') || current_user_can('edit_posts')) {
+            // Administrator is ALWAYS authorized
+            if (current_user_can('manage_options') || current_user_can('administrator')) {
                 return true;
             }
-        }
 
-        // 2. Check if PIN requirement is disabled
-        $requirePin = (bool) get_option('clubcore_terminal_require_pin', '0');
-        if (!$requirePin) {
-            return true;
-        }
-
-        // 3. Check session cookie
-        if (!empty($_COOKIE[self::SESSION_COOKIE])) {
-            $hash = sanitize_text_field(wp_unslash($_COOKIE[self::SESSION_COOKIE]));
-            if ($hash === $this->generateSessionHash()) {
+            // Direct capability
+            if (current_user_can('clubcore_add_members')) {
                 return true;
+            }
+
+            // Role-based authorization configured in settings
+            $allowedRoles = (array) get_option('clubcore_terminal_allowed_roles', ['administrator', 'shop_manager']);
+            $user = wp_get_current_user();
+            if (!empty($user->roles)) {
+                foreach ($user->roles as $role) {
+                    if (in_array($role, $allowedRoles, true)) {
+                        return true;
+                    }
+                }
+            }
+
+            // Regular subscriber, customer, or other unauthorized roles
+            return false;
+        }
+
+        // 2. Guest / Non-logged-in session
+        $guestMode = (string) get_option('clubcore_terminal_guest_mode', 'login_required');
+        $requirePin = (bool) get_option('clubcore_terminal_require_pin', '0');
+
+        // Check if PIN mode is enabled
+        if ($guestMode === 'allow_pin' || $requirePin) {
+            if (!empty($_COOKIE[self::SESSION_COOKIE])) {
+                $hash = sanitize_text_field(wp_unslash($_COOKIE[self::SESSION_COOKIE]));
+                if ($hash === $this->generateSessionHash()) {
+                    return true;
+                }
             }
         }
 
@@ -224,9 +396,10 @@ class TerminalManager
         check_ajax_referer('clubcore_terminal_nonce', 'nonce');
 
         if (!$this->isAuthorized()) {
+            $canPin = !is_user_logged_in() && ((bool) get_option('clubcore_terminal_require_pin', '0') || (string) get_option('clubcore_terminal_guest_mode', 'login_required') === 'allow_pin');
             wp_send_json_error([
-                'message' => __('شما اجازه دسترسی به دستگاه ثبت مشتری را ندارید. لطفاً پین امنیتی را وارد کنید.', 'clubcore'),
-                'need_pin' => true,
+                'message' => __('شما اجازه دسترسی به دستگاه ثبت مشتری را ندارید.', 'clubcore'),
+                'need_pin' => $canPin,
             ], 403);
         }
 
@@ -339,7 +512,7 @@ class TerminalManager
 
     public function addAdminBarMenu(\WP_Admin_Bar $wp_admin_bar): void
     {
-        if (!current_user_can('clubcore_add_members') && !current_user_can('manage_options')) {
+        if (!$this->isAuthorized()) {
             return;
         }
 

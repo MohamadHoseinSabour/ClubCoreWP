@@ -40,6 +40,13 @@ $page_slug = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['pa
     <div class="clubcore-settings-content">
         <?php
         $template_file = plugin_dir_path( dirname( __DIR__ ) ) . 'templates/admin/settings/' . $active_tab . '.php';
+        if ( ! file_exists( $template_file ) ) {
+            $alt_file = plugin_dir_path( dirname( __DIR__ ) ) . 'templates/admin/settings/' . str_replace( '_', '-', $active_tab ) . '.php';
+            if ( file_exists( $alt_file ) ) {
+                $template_file = $alt_file;
+            }
+        }
+
         if ( file_exists( $template_file ) ) {
             include $template_file;
         } else {

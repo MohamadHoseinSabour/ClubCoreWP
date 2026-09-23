@@ -66,7 +66,8 @@ class Plugin
 
     private function boot(): void
     {
-        // 1. Settings & Migrations
+        // 1. Capabilities, Settings & Migrations
+        CapabilityManager::init();
         $this->settingsManager = new SettingsManager();
         $this->settingsManager->init();
 

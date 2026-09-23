@@ -41,7 +41,40 @@ class CapabilityManager
     }
 
     /**
-     * Ensure administrator role always has plugin capabilities.
+     * Initialize capability management hooks.
+     */
+    public static function init(): void
+    {
+        // Unconditionally grant all clubcore capabilities to administrators dynamically
+        add_filter('user_has_cap', [self::class, 'filterUserCaps'], 10, 4);
+
+        if (is_admin()) {
+            add_action('admin_init', [self::class, 'ensureAdminCapabilities']);
+        }
+    }
+
+    /**
+     * Filter user capabilities dynamically.
+     * Any user with manage_options or administrator role unconditionally possesses all clubcore capabilities.
+     *
+     * @param array<string, bool> $allcaps
+     * @param array<int, string> $caps
+     * @param array<int, mixed> $args
+     * @param \WP_User $user
+     * @return array<string, bool>
+     */
+    public static function filterUserCaps(array $allcaps, array $caps, array $args, \WP_User $user): array
+    {
+        if (!empty($allcaps['manage_options']) || !empty($allcaps['administrator'])) {
+            foreach (self::CAPABILITIES as $cap) {
+                $allcaps[$cap] = true;
+            }
+        }
+        return $allcaps;
+    }
+
+    /**
+     * Ensure administrator role always has plugin capabilities in DB.
      * Prevents missing menu issues if activation hook didn't fire properly.
      */
     public static function ensureAdminCapabilities(): void

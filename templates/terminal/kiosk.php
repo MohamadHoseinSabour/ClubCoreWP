@@ -11,13 +11,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$terminalManager = new \ClubCore\Presentation\Terminal\TerminalManager(
-    \ClubCore\Plugin::init()->getCreateMemberUseCase(),
-    \ClubCore\Plugin::init()->getSmsService()
-);
+$terminalManager = \ClubCore\Plugin::init()->getTerminalManager();
 
 $isAuthorized = $terminalManager->isAuthorized();
-$requirePin = (bool) get_option('clubcore_terminal_require_pin', '0');
+$guestMode = (string) get_option('clubcore_terminal_guest_mode', 'login_required');
+$requirePin = (bool) get_option('clubcore_terminal_require_pin', '0') || ($guestMode === 'allow_pin');
 $todayCount = $terminalManager->getTodayRegisteredCount();
 $shopName = get_option('clubcore_terminal_title', get_bloginfo('name') ?: 'باشگاه مشتریان');
 $ajaxUrl = admin_url('admin-ajax.php');

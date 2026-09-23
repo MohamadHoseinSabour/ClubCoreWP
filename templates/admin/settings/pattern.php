@@ -8,23 +8,27 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
+
+$bodyId   = get_option('clubcore_pattern_body_id', '');
+$template = get_option('clubcore_pattern_template', '');
 ?>
 <form method="post" action="options.php">
     <?php
-    settings_fields( 'clubcore_pattern_options' );
-    do_settings_sections( 'clubcore_pattern_options' );
+    settings_fields( 'clubcore_pattern_settings' );
+    do_settings_sections( 'clubcore_pattern_settings' );
     ?>
     <table class="form-table">
         <tr>
             <th scope="row"><label for="clubcore_pattern_body_id"><?php esc_html_e( 'کد الگو (Pattern Body ID)', 'clubcore' ); ?></label></th>
             <td>
-                <input name="clubcore_pattern_body_id" type="text" id="clubcore_pattern_body_id" class="regular-text ltr" dir="ltr">
+                <input name="clubcore_pattern_body_id" type="text" id="clubcore_pattern_body_id" class="regular-text ltr" dir="ltr" value="<?php echo esc_attr($bodyId); ?>" placeholder="مثال: 123456">
+                <p class="description"><?php esc_html_e('کد الگوی تایید شده در پنل پیامک ملی‌پیامک برای ارسال پیامک خوش‌آمدگویی و اعتبارسنجی.', 'clubcore'); ?></p>
             </td>
         </tr>
         <tr>
             <th scope="row"><label for="clubcore_pattern_template"><?php esc_html_e( 'متن الگو (فقط برای نمایش)', 'clubcore' ); ?></label></th>
             <td>
-                <textarea id="clubcore_pattern_template" class="large-text" rows="5" readonly dir="rtl" placeholder="مشتری گرامی {name} به باشگاه مشتریان خوش آمدید."></textarea>
+                <textarea name="clubcore_pattern_template" id="clubcore_pattern_template" class="large-text" rows="4" dir="rtl" placeholder="مشتری گرامی {name} به باشگاه مشتریان خوش آمدید."><?php echo esc_textarea($template); ?></textarea>
                 <p class="description"><?php esc_html_e( 'متن الگو برای بررسی متغیرها نمایش داده می‌شود.', 'clubcore' ); ?></p>
             </td>
         </tr>
@@ -33,6 +37,9 @@ if ( ! defined( 'ABSPATH' ) ) {
             <td>
                 <div id="clubcore-detected-vars" class="clubcore-vars-box">
                     <code>{name}</code>
+                    <code>{first_name}</code>
+                    <code>{last_name}</code>
+                    <code>{phone}</code>
                 </div>
                 <div id="clubcore-pattern-validation" class="clubcore-validation-result"></div>
             </td>
