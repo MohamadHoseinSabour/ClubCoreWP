@@ -32,11 +32,18 @@ class MenuManager
         $menuIcon = get_option('clubcore_admin_menu_icon', 'dashicons-groups');
         $menuPosition = (int) get_option('clubcore_admin_menu_position', 30);
 
+        $mainCap = current_user_can('clubcore_add_members') ? 'clubcore_add_members' : 'manage_options';
+        $membersCap = current_user_can('clubcore_view_members') ? 'clubcore_view_members' : 'manage_options';
+        $smsCap = current_user_can('clubcore_view_sms_logs') ? 'clubcore_view_sms_logs' : 'manage_options';
+        $importCap = current_user_can('clubcore_import_members') ? 'clubcore_import_members' : 'manage_options';
+        $auditCap = current_user_can('clubcore_view_audit_logs') ? 'clubcore_view_audit_logs' : 'manage_options';
+        $settingsCap = current_user_can('clubcore_manage_settings') ? 'clubcore_manage_settings' : 'manage_options';
+
         // Main menu page.
         add_menu_page(
             __('باشگاه مشتریان', 'clubcore'),
             $menuTitle,
-            'clubcore_add_members',
+            $mainCap,
             $menuSlug,
             [$this, 'renderAddCustomerPage'],
             $menuIcon,
@@ -48,7 +55,7 @@ class MenuManager
             $menuSlug,
             __('ثبت مشتری', 'clubcore'),
             __('ثبت مشتری', 'clubcore'),
-            'clubcore_add_members',
+            $mainCap,
             $menuSlug,
             [$this, 'renderAddCustomerPage'],
         );
@@ -58,7 +65,7 @@ class MenuManager
             $menuSlug,
             __('اعضا', 'clubcore'),
             __('اعضا', 'clubcore'),
-            'clubcore_view_members',
+            $membersCap,
             $menuSlug . '-members',
             [$this, 'renderMembersPage'],
         );
@@ -68,7 +75,7 @@ class MenuManager
             $menuSlug,
             __('تاریخچه پیامک', 'clubcore'),
             __('تاریخچه پیامک', 'clubcore'),
-            'clubcore_view_sms_logs',
+            $smsCap,
             $menuSlug . '-sms-history',
             [$this, 'renderSmsHistoryPage'],
         );
@@ -78,7 +85,7 @@ class MenuManager
             $menuSlug,
             __('وارد / خروجی', 'clubcore'),
             __('وارد / خروجی', 'clubcore'),
-            'clubcore_import_members',
+            $importCap,
             $menuSlug . '-import-export',
             [$this, 'renderImportExportPage'],
         );
@@ -88,7 +95,7 @@ class MenuManager
             $menuSlug,
             __('گزارش عملیات', 'clubcore'),
             __('گزارش عملیات', 'clubcore'),
-            'clubcore_view_audit_logs',
+            $auditCap,
             $menuSlug . '-audit-log',
             [$this, 'renderAuditLogPage'],
         );
@@ -98,7 +105,7 @@ class MenuManager
             $menuSlug,
             __('تنظیمات', 'clubcore'),
             __('تنظیمات', 'clubcore'),
-            'clubcore_manage_settings',
+            $settingsCap,
             $menuSlug . '-settings',
             [$this, 'renderSettingsPage'],
         );
@@ -109,7 +116,7 @@ class MenuManager
      */
     public function renderAddCustomerPage(): void
     {
-        if (!current_user_can('clubcore_add_members')) {
+        if (!current_user_can('clubcore_add_members') && !current_user_can('manage_options')) {
             wp_die(esc_html__('شما دسترسی مشاهده این صفحه را ندارید.', 'clubcore'));
         }
         include CLUBCORE_PLUGIN_DIR . 'templates/admin/add-customer.php';
@@ -120,7 +127,7 @@ class MenuManager
      */
     public function renderMembersPage(): void
     {
-        if (!current_user_can('clubcore_view_members')) {
+        if (!current_user_can('clubcore_view_members') && !current_user_can('manage_options')) {
             wp_die(esc_html__('شما دسترسی مشاهده این صفحه را ندارید.', 'clubcore'));
         }
 
@@ -143,7 +150,7 @@ class MenuManager
      */
     public function renderSmsHistoryPage(): void
     {
-        if (!current_user_can('clubcore_view_sms_logs')) {
+        if (!current_user_can('clubcore_view_sms_logs') && !current_user_can('manage_options')) {
             wp_die(esc_html__('شما دسترسی مشاهده این صفحه را ندارید.', 'clubcore'));
         }
         include CLUBCORE_PLUGIN_DIR . 'templates/admin/sms-history.php';
@@ -154,7 +161,7 @@ class MenuManager
      */
     public function renderImportExportPage(): void
     {
-        if (!current_user_can('clubcore_import_members')) {
+        if (!current_user_can('clubcore_import_members') && !current_user_can('manage_options')) {
             wp_die(esc_html__('شما دسترسی مشاهده این صفحه را ندارید.', 'clubcore'));
         }
         include CLUBCORE_PLUGIN_DIR . 'templates/admin/import-export.php';
@@ -165,7 +172,7 @@ class MenuManager
      */
     public function renderAuditLogPage(): void
     {
-        if (!current_user_can('clubcore_view_audit_logs')) {
+        if (!current_user_can('clubcore_view_audit_logs') && !current_user_can('manage_options')) {
             wp_die(esc_html__('شما دسترسی مشاهده این صفحه را ندارید.', 'clubcore'));
         }
         include CLUBCORE_PLUGIN_DIR . 'templates/admin/audit-log.php';
@@ -176,7 +183,7 @@ class MenuManager
      */
     public function renderSettingsPage(): void
     {
-        if (!current_user_can('clubcore_manage_settings')) {
+        if (!current_user_can('clubcore_manage_settings') && !current_user_can('manage_options')) {
             wp_die(esc_html__('شما دسترسی مشاهده این صفحه را ندارید.', 'clubcore'));
         }
         include CLUBCORE_PLUGIN_DIR . 'templates/admin/settings.php';

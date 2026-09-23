@@ -1,10 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 namespace ClubCore\Infrastructure\WordPress;
 
 /**
  * Manages plugin capabilities.
+ *
+ * @package ClubCore\Infrastructure\WordPress
  */
-class CapabilityManager {
+class CapabilityManager
+{
     public const CAPABILITIES = [
         'clubcore_manage',
         'clubcore_manage_settings',
@@ -16,25 +22,40 @@ class CapabilityManager {
         'clubcore_export_members',
         'clubcore_send_sms',
         'clubcore_view_sms_logs',
-        'clubcore_view_audit_logs'
+        'clubcore_view_audit_logs',
     ];
 
     /**
      * Install capabilities on plugin activation.
      */
-    public static function installCapabilities(): void {
+    public static function installCapabilities(): void
+    {
         $role = get_role('administrator');
         if ($role) {
             foreach (self::CAPABILITIES as $cap) {
-                $role->add_cap($cap);
+                if (!$role->has_cap($cap)) {
+                    $role->add_cap($cap);
+                }
             }
+        }
+    }
+
+    /**
+     * Ensure administrator role always has plugin capabilities.
+     * Prevents missing menu issues if activation hook didn't fire properly.
+     */
+    public static function ensureAdminCapabilities(): void
+    {
+        if (is_admin() && current_user_can('manage_options') && !current_user_can('clubcore_manage')) {
+            self::installCapabilities();
         }
     }
 
     /**
      * Remove capabilities on plugin uninstallation.
      */
-    public static function removeCapabilities(): void {
+    public static function removeCapabilities(): void
+    {
         global $wp_roles;
         if (!isset($wp_roles)) {
             $wp_roles = new \WP_Roles();
