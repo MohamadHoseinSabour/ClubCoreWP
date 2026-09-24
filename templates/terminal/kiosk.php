@@ -639,7 +639,6 @@ $isEmbedded = isset($isEmbeddedShortcode) && $isEmbeddedShortcode;
         <!-- Main Action Button -->
         <button type="button" class="terminal-submit-btn" id="term-submit-btn" disabled>
             <span>ثبت مشتری و ارسال پیامک</span>
-            <span>📱</span>
         </button>
 
         <!-- Result Celebration Overlay -->
@@ -891,7 +890,7 @@ $isEmbedded = isset($isEmbeddedShortcode) && $isEmbeddedShortcode;
         })
         .then(function(res) { return res.json(); })
         .then(function(data) {
-            submitBtn.innerHTML = '<span>ثبت مشتری و ارسال پیامک</span><span>📱</span>';
+            submitBtn.innerHTML = '<span>ثبت مشتری و ارسال پیامک</span>';
             if (data.success) {
                 handleSuccess(data.data);
             } else {
@@ -899,7 +898,7 @@ $isEmbedded = isset($isEmbeddedShortcode) && $isEmbeddedShortcode;
             }
         })
         .catch(function(err) {
-            submitBtn.innerHTML = '<span>ثبت مشتری و ارسال پیامک</span><span>📱</span>';
+            submitBtn.innerHTML = '<span>ثبت مشتری و ارسال پیامک</span>';
             handleError('خطا در برقراری ارتباط با سرور.');
         });
     }

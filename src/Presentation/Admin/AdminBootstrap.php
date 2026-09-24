@@ -33,10 +33,12 @@ class AdminBootstrap
         // AJAX handlers.
         add_action('wp_ajax_clubcore_create_member', [$this, 'handleCreateMember']);
         add_action('wp_ajax_clubcore_send_test_sms', [$this, 'handleSendTestSms']);
+        add_action('wp_ajax_clubcore_check_sms_connection', [$this, 'handleCheckSmsConnection']);
         add_action('wp_ajax_clubcore_import_preview', [$this, 'handleImportPreview']);
         add_action('wp_ajax_clubcore_import_execute', [$this, 'handleImportExecute']);
         add_action('wp_ajax_clubcore_resend_sms', [$this, 'handleResendSms']);
         add_action('wp_ajax_clubcore_save_settings', [$this, 'handleSaveSettings']);
+
     }
 
     /**
@@ -77,6 +79,19 @@ class AdminBootstrap
             $result = $useCase->execute($request);
 
             if ($result->status === 'created') {
+                $smsStatus = 'not_sent';
+                $smsReference = '';
+                if ($result->member !== null) {
+                    try {
+                        $smsService = $plugin->getSmsService();
+                        $smsResult = $smsService->sendMemberSms($result->member, 'welcome');
+                        $smsStatus = $smsResult->isSuccess() ? 'sent' : 'failed';
+                        $smsReference = $smsResult->getProviderId();
+                    } catch (\Throwable $e) {
+                        $smsStatus = 'failed';
+                    }
+                }
+
                 wp_send_json_success([
                     'status' => 'created',
                     'message' => __('مشتری با موفقیت ثبت شد.', 'clubcore'),
@@ -89,8 +104,8 @@ class AdminBootstrap
                         'membership_status' => $result->member?->getMembershipStatus(),
                         'created_at' => $result->member?->getMembershipCreatedAt(),
                     ],
-                    'sms_status' => $result->smsStatus ?? '',
-                    'sms_reference' => $result->smsReference ?? '',
+                    'sms_status' => $smsStatus,
+                    'sms_reference' => $smsReference,
                 ]);
             } elseif ($result->status === 'already_exists') {
                 wp_send_json_success([
@@ -165,6 +180,55 @@ class AdminBootstrap
         } catch (\Exception $e) {
             wp_send_json_error([
                 'message' => __('خطا در ارسال پیامک آزمایشی.', 'clubcore'),
+            ]);
+        }
+    }
+
+    /**
+     * AJAX: Check SMS provider connection and credit.
+     */
+    public function handleCheckSmsConnection(): void
+    {
+        check_ajax_referer('clubcore_check_sms_connection', 'nonce');
+
+        if (!current_user_can('clubcore_manage_settings')) {
+            wp_send_json_error([
+                'message' => __('شما دسترسی انجام این عملیات را ندارید.', 'clubcore'),
+            ], 403);
+        }
+
+        try {
+            $plugin = \ClubCore\Plugin::init();
+            $provider = $plugin->getSmsProvider();
+
+            if (!$provider->isConfigured()) {
+                wp_send_json_error([
+                    'message' => __('سرویس پیامک هنوز تنظیم نشده است. لطفاً نام کاربری/رمز یا توکن API را وارد کنید.', 'clubcore'),
+                ]);
+            }
+
+            $credit = $provider->getCredit();
+
+            if ($credit < 0) {
+                // Console mode - connection established but credit info not available via this endpoint
+                wp_send_json_success([
+                    'message'  => __('ارتباط با سرویس ملی‌پیامک (کنسول) با موفقیت برقرار شد.', 'clubcore'),
+                    'credit'   => null,
+                    'provider' => $provider->getName(),
+                ]);
+            } else {
+                wp_send_json_success([
+                    'message'  => sprintf(
+                        __('ارتباط با سرویس ملی‌پیامک برقرار شد. موجودی اعتبار: %s پیامک', 'clubcore'),
+                        number_format($credit)
+                    ),
+                    'credit'   => $credit,
+                    'provider' => $provider->getName(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            wp_send_json_error([
+                'message' => sprintf(__('خطا در برقراری ارتباط با سرویس پیامک: %s', 'clubcore'), $e->getMessage()),
             ]);
         }
     }

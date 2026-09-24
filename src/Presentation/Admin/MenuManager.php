@@ -65,12 +65,11 @@ class MenuManager
         add_submenu_page(
             $menuSlug,
             __('دستگاه ثبت مشتری (کیوسک)', 'clubcore'),
-            '📱 ' . __('دستگاه ثبت مشتری', 'clubcore'),
+            __('دستگاه ثبت مشتری', 'clubcore'),
             $mainCap,
             $menuSlug . '-terminal',
             function () use ($terminalUrl) {
                 echo '<div class="wrap" style="max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); text-align: center;">';
-                echo '<div style="font-size: 48px; margin-bottom: 12px;">📱</div>';
                 echo '<h1 style="font-size: 22px; margin-bottom: 12px;">' . esc_html__('دستگاه لمسی ثبت مشتری باشگاه', 'clubcore') . '</h1>';
                 echo '<p style="font-size: 14px; color: #64748b; line-height: 1.7; margin-bottom: 24px;">' . esc_html__('این رابط اختصاصی شبیه دستگاه‌های پوز و استند لمسی طراحی شده و برای موبایل، تبلت و صندوقدار بدون نیاز به دسترسی به پیشخوان وردپرس بهینه شده است.', 'clubcore') . '</p>';
                 echo '<a href="' . esc_url($terminalUrl) . '" target="_blank" class="button button-primary button-hero" style="font-size: 16px; font-weight: 700; padding: 0 32px; height: 50px; line-height: 48px; border-radius: 8px;">' . esc_html__('باز کردن دستگاه در پنجره جدید ↗', 'clubcore') . '</a>';

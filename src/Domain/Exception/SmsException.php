@@ -62,12 +62,22 @@ class SmsException extends \RuntimeException
         return $this->errorType;
     }
 
+    public function getType(): string
+    {
+        return $this->errorType;
+    }
+
     /**
      * Get the original provider error code.
      *
      * @return string
      */
     public function getProviderCode(): string
+    {
+        return $this->providerCode;
+    }
+
+    public function getProviderErrorCode(): string
     {
         return $this->providerCode;
     }

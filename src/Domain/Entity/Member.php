@@ -121,6 +121,30 @@ class Member
 
     // ─── Getters ───────────────────────────────────────────
 
+    public function __get(string $name): mixed
+    {
+        return match ($name) {
+            'id' => $this->id,
+            'userId', 'user_id' => $this->userId,
+            'phone', 'phoneNormalized', 'phone_normalized' => $this->phoneNormalized,
+            'phoneDisplay', 'phone_display' => $this->phoneDisplay,
+            'firstName', 'first_name' => $this->firstName,
+            'lastName', 'last_name' => $this->lastName,
+            'email' => $this->email,
+            'membershipStatus', 'membership_status' => $this->membershipStatus,
+            'membershipSource', 'membership_source' => $this->membershipSource,
+            'membershipCreatedAt', 'membership_created_at' => $this->membershipCreatedAt,
+            'lastSmsStatus', 'last_sms_status' => $this->lastSmsStatus,
+            'lastSmsSentAt', 'last_sms_sent_at' => $this->lastSmsSentAt,
+            default => null,
+        };
+    }
+
+    public function __isset(string $name): bool
+    {
+        return $this->__get($name) !== null;
+    }
+
     public function getId(): int
     {
         return $this->id;

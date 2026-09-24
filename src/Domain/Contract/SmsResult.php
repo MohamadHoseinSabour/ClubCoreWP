@@ -76,4 +76,39 @@ final class SmsResult
             duration: $duration,
         );
     }
+
+    public function isSuccess(): bool
+    {
+        return $this->success;
+    }
+
+    public function getProviderId(): string
+    {
+        return $this->providerReference;
+    }
+
+    public function getProviderReference(): string
+    {
+        return $this->providerReference;
+    }
+
+    public function getErrorMessage(): string
+    {
+        return $this->userMessage ?: $this->providerMessage;
+    }
+
+    public function getUserMessage(): string
+    {
+        return $this->userMessage ?: $this->providerMessage;
+    }
+
+    public function getProviderCode(): string
+    {
+        return $this->providerCode;
+    }
+
+    public function getErrorType(): string
+    {
+        return $this->errorType;
+    }
 }

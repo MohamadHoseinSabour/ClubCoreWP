@@ -518,7 +518,7 @@ class TerminalManager
 
         $wp_admin_bar->add_node([
             'id'    => 'clubcore_terminal_launcher',
-            'title' => '📱 ' . __('دستگاه ثبت مشتری (کیوسک)', 'clubcore'),
+            'title' => __('دستگاه ثبت مشتری (کیوسک)', 'clubcore'),
             'href'  => $this->getTerminalUrl(),
             'meta'  => [
                 'target' => '_blank',

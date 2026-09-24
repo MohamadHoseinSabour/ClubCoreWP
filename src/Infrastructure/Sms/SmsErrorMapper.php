@@ -38,14 +38,14 @@ class SmsErrorMapper
 
     public function mapClassicError(string $code): SmsException
     {
-        $type = self::CLASSIC_ERRORS[$code] ?? 'unknown_error';
-        return SmsException::providerError($type, $this->getUserMessage($code), $code);
+        $userMsg = $this->getUserMessage($code);
+        return new SmsException(SmsException::ERROR_PROVIDER, $userMsg, $code, $userMsg);
     }
 
     public function mapGeneralError(string $code): SmsException
     {
-        $type = self::GENERAL_ERRORS[$code] ?? 'unknown_error';
-        return SmsException::providerError($type, $this->getUserMessage($code), $code);
+        $userMsg = $this->getUserMessage($code);
+        return new SmsException(SmsException::ERROR_PROVIDER, $userMsg, $code, $userMsg);
     }
 
     public function isRetryableCode(string $code): bool

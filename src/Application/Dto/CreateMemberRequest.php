@@ -11,7 +11,7 @@ use ClubCore\Domain\ValueObject\MembershipSource;
  *
  * @package ClubCore\Application\Dto
  */
-readonly class CreateMemberRequest
+class CreateMemberRequest
 {
     /**
      * @param string           $phone       Raw input phone number.
@@ -23,13 +23,13 @@ readonly class CreateMemberRequest
      * @param string           $requestType Log request type (e.g., 'welcome').
      */
     public function __construct(
-        public string $phone,
-        public string $firstName = '',
-        public string $lastName = '',
-        public string $email = '',
-        public MembershipSource $source = MembershipSource::Admin,
-        public bool $sendSms = true,
-        public string $requestType = 'welcome'
+        public readonly string $phone,
+        public readonly string $firstName = '',
+        public readonly string $lastName = '',
+        public readonly string $email = '',
+        public readonly MembershipSource $source = MembershipSource::Admin,
+        public readonly bool $sendSms = true,
+        public readonly string $requestType = 'welcome'
     ) {
     }
 }

@@ -30,7 +30,6 @@ $terminalUrl = \ClubCore\Plugin::init()->getTerminalManager()->getTerminalUrl();
     <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; padding: 20px; border-radius: 12px; margin-bottom: 24px; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
         <div>
             <h3 style="margin: 0 0 6px; font-size: 16px; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
-                <span>📱</span>
                 <span><?php esc_html_e('دستگاه ثبت مشتری (کیوسک لمسی / شبیه دستگاه پوز)', 'clubcore'); ?></span>
             </h3>
             <p style="margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.6;">

@@ -20,7 +20,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     <div style="background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); color: #fff; padding: 16px 20px; margin: 16px 0 24px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(6, 95, 70, 0.25);">
         <div>
             <strong style="font-size: 15px; display: flex; align-items: center; gap: 8px;">
-                <span>📱</span>
                 <span><?php esc_html_e('دستگاه لمسی ثبت مشتری (کیوسک اختصاصی ویژه موبایل و تبلت)', 'clubcore'); ?></span>
             </strong>
             <p style="margin: 6px 0 0; color: #a7f3d0; font-size: 13px;">
@@ -34,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
     <div class="clubcore-card">
         <form id="clubcore-add-customer-form" method="post" action="">
-            <?php wp_nonce_field( 'clubcore_add_customer', 'clubcore_nonce' ); ?>
+            <?php wp_nonce_field( 'clubcore_create_member', 'clubcore_nonce' ); ?>
             
             <table class="form-table" role="presentation">
                 <tbody>
@@ -75,10 +74,10 @@ if ( ! defined( 'ABSPATH' ) ) {
             </table>
 
             <p class="submit">
-                <button type="submit" name="submit" id="submit" class="button button-primary button-hero">
+                <button type="submit" name="submit" id="clubcore-submit-btn" class="button button-primary button-hero">
                     <?php esc_html_e( 'ثبت مشتری و ارسال پیامک', 'clubcore' ); ?>
                 </button>
-                <span class="spinner" id="clubcore-add-spinner"></span>
+                <span class="spinner" id="clubcore-spinner"></span>
             </p>
         </form>
     </div>

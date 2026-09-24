@@ -64,22 +64,57 @@
         }
         checkContrast();
 
-        // Send Test SMS Handler
-        $('#clubcore-test-sms-btn').on('click', function(e) {
+        // Check SMS Credit / Connection Handler
+        $('#clubcore-check-credit').on('click', function(e) {
             e.preventDefault();
             var $btn = $(this);
-            var phone = $.trim($('#clubcore-test-phone').val());
-            var firstName = $.trim($('#clubcore-test-fname').val());
-            var lastName = $.trim($('#clubcore-test-lname').val());
-            var nonce = $('#clubcore_test_sms_nonce').val();
+            var $result = $('#clubcore-credit-result');
+
+            if (!$result.length) {
+                $btn.after('<span id="clubcore-credit-result" style="margin-right:12px; font-style:italic;"></span>');
+                $result = $('#clubcore-credit-result');
+            }
+
+            $btn.prop('disabled', true).text(clubcoreAdmin.i18n.loading);
+            $result.text('').css('color', '');
+
+            $.post(clubcoreAdmin.ajaxUrl, {
+                action: 'clubcore_check_sms_connection',
+                nonce: clubcoreAdmin.nonces.checkSmsConnection
+            }).done(function(res) {
+                if (res.success) {
+                    $result.css('color', '#00a32a').text('✓ ' + res.data.message);
+                } else {
+                    $result.css('color', '#d63638').text('✗ ' + (res.data.message || 'خطا در بررسی ارتباط'));
+                }
+            }).fail(function() {
+                $result.css('color', '#d63638').text('✗ خطای سرور رخ داد.');
+            }).always(function() {
+                $btn.prop('disabled', false).html('🔍 بررسی ارتباط و موجودی اعتبار');
+            });
+        });
+
+        // Send Test SMS Handler
+        $(document).on('click', '#clubcore-test-sms-btn, #clubcore-test-sms', function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var phone = $.trim($('#clubcore-test-phone').val() || $('#test_phone').val());
+            var firstName = $.trim($('#clubcore-test-fname').val() || $('#test_first_name').val());
+            var lastName = $.trim($('#clubcore-test-lname').val() || $('#test_last_name').val());
+            var nonce = $('#clubcore_test_sms_nonce').val() || (window.clubcoreAdmin && clubcoreAdmin.nonces ? clubcoreAdmin.nonces.testSms : '');
             var $res = $('#clubcore-test-sms-result');
+
+            if (!$res.length) {
+                $btn.parent().after('<div id="clubcore-test-sms-result" style="margin-top:12px;"></div>');
+                $res = $('#clubcore-test-sms-result');
+            }
 
             if (!phone) {
                 alert('لطفاً شماره موبایل تستی را وارد کنید.');
                 return;
             }
 
-            $btn.prop('disabled', true).text(clubcoreAdmin.i18n.loading);
+            $btn.prop('disabled', true).text(window.clubcoreAdmin && clubcoreAdmin.i18n ? clubcoreAdmin.i18n.loading : 'در حال ارسال...');
             $res.empty();
 
             $.post(clubcoreAdmin.ajaxUrl, {
@@ -90,14 +125,14 @@
                 nonce: nonce
             }).done(function(res) {
                 if (res.success) {
-                    $res.html('<div class="clubcore-notice clubcore-notice-success">' + res.data.message + ' (شناسه: ' + (res.data.reference || '-') + ')</div>');
+                    $res.html('<div class="clubcore-notice clubcore-notice-success" style="padding:10px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; color:#15803d; margin-top:10px;">' + res.data.message + ' (شناسه پیگیری: ' + (res.data.reference || '-') + ')</div>');
                 } else {
-                    $res.html('<div class="clubcore-notice clubcore-notice-error">' + (res.data.message || 'خطا در ارسال پیامک آزمایشی') + '</div>');
+                    $res.html('<div class="clubcore-notice clubcore-notice-error" style="padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#b91c1c; margin-top:10px;">' + (res.data.message || 'خطا در ارسال پیامک آزمایشی') + '</div>');
                 }
             }).fail(function() {
-                $res.html('<div class="clubcore-notice clubcore-notice-error">خطای سرور رخ داد.</div>');
+                $res.html('<div class="clubcore-notice clubcore-notice-error" style="padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#b91c1c; margin-top:10px;">خطای سرور رخ داد.</div>');
             }).always(function() {
-                $btn.prop('disabled', false).text('ارسال پیامک آزمایشی');
+                $btn.prop('disabled', false).html('📨 ارسال پیامک آزمایشی');
             });
         });
     });

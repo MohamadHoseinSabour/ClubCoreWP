@@ -24,8 +24,9 @@ class SmsService
 
     public function sendMemberSms(Member $member, string $requestType = 'welcome'): SmsResult
     {
-        $patternCode = get_option("clubcore_sms_pattern_{$requestType}", '');
-        $template = get_option("clubcore_sms_template_{$requestType}", '');
+        // Use the unified pattern settings stored in clubcore_pattern_body_id / clubcore_pattern_template
+        $patternCode = get_option('clubcore_pattern_body_id', '');
+        $template = get_option('clubcore_pattern_template', '');
 
         if (!$patternCode) {
             throw SmsException::providerError('missing_pattern', 'Pattern code is not configured.');
@@ -33,39 +34,45 @@ class SmsService
 
         $variableNames = $this->parser->parse($template);
         
+        $phone = method_exists($member, 'getPhoneNormalized') ? $member->getPhoneNormalized() : ($member->phone ?? '');
+        $firstName = method_exists($member, 'getFirstName') ? $member->getFirstName() : ($member->first_name ?? '');
+        $lastName = method_exists($member, 'getLastName') ? $member->getLastName() : ($member->last_name ?? '');
+        $memberId = method_exists($member, 'getId') ? $member->getId() : ($member->id ?? 0);
+
         $memberData = [
-            'first_name' => $member->first_name ?? '',
-            'last_name' => $member->last_name ?? '',
-            'phone' => $member->phone ?? '',
+            'first_name' => $firstName,
+            'last_name'  => $lastName,
+            'name'       => trim($firstName . ' ' . $lastName),
+            'phone'      => $phone,
         ];
 
         $resolvedValues = $this->parser->resolveValues($variableNames, $memberData);
 
         $result = $this->provider->sendPattern(
-            $member->phone ?? '',
+            $phone,
             $patternCode,
             $resolvedValues
         );
 
         $this->logRepository->create([
-            'member_id' => $member->id ?? 0,
-            'phone' => $member->phone ?? '',
-            'type' => $requestType,
-            'status' => $result->isSuccess() ? 'success' : 'failure',
-            'provider_id' => $result->getProviderId(),
+            'member_id'     => $memberId,
+            'phone'         => $phone,
+            'type'          => $requestType,
+            'status'        => $result->isSuccess() ? 'success' : 'failure',
+            'provider_id'   => $result->getProviderId(),
             'error_message' => $result->getErrorMessage(),
-            'sent_at' => current_time('mysql', true),
+            'sent_at'       => current_time('mysql', true),
         ]);
 
-        if (isset($member->id) && $member->id > 0) {
-            update_user_meta($member->id, '_clubcore_last_sms_status', $result->isSuccess() ? 'success' : 'failure');
-            update_user_meta($member->id, '_clubcore_last_sms_sent_at', current_time('mysql', true));
+        if ($memberId > 0) {
+            update_user_meta($memberId, '_clubcore_last_sms_status', $result->isSuccess() ? 'success' : 'failure');
+            update_user_meta($memberId, '_clubcore_last_sms_sent_at', current_time('mysql', true));
         }
 
         $this->auditLogger->log('sms_sent', [
-            'member_id' => $member->id ?? 0,
-            'type' => $requestType,
-            'status' => $result->isSuccess() ? 'success' : 'failure',
+            'member_id' => $memberId,
+            'type'      => $requestType,
+            'status'    => $result->isSuccess() ? 'success' : 'failure',
         ]);
 
         return $result;
@@ -77,18 +84,19 @@ class SmsService
             throw new \InvalidArgumentException('Phone number is required.');
         }
 
-        $patternCode = get_option('clubcore_sms_pattern_test', '');
+        $patternCode = get_option('clubcore_pattern_body_id', '');
         if (!$patternCode) {
-            throw SmsException::providerError('missing_pattern', 'Test pattern code is not configured.');
+            throw SmsException::providerError('missing_pattern', __('کد الگو (Pattern Body ID) تنظیم نشده است. لطفاً در تنظیمات > الگوی پیامک آن را وارد کنید.', 'clubcore'));
         }
 
         $memberData = [
             'first_name' => $firstName,
-            'last_name' => $lastName,
-            'phone' => $phone,
+            'last_name'  => $lastName,
+            'phone'      => $phone,
         ];
 
-        $template = get_option('clubcore_sms_template_test', '');
+        $template = get_option('clubcore_pattern_template', '');
+
         $variableNames = $this->parser->parse($template);
         
         $resolvedValues = $this->parser->resolveValues($variableNames, $memberData);

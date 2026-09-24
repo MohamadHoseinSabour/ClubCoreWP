@@ -288,8 +288,13 @@ class SettingsManager
 
     public function sanitizePassword(string $newVal): string
     {
-        // Don't overwrite if left blank on edit
+        // Don't overwrite if left blank or still showing placeholder on edit
         if (trim($newVal) === '' || trim($newVal) === '********') {
+            // Determine which option is currently being saved via the active filter
+            $filter = current_filter();
+            if (str_contains($filter, 'api_token')) {
+                return (string) get_option('clubcore_sms_api_token', '');
+            }
             return (string) get_option('clubcore_sms_password', '');
         }
         return sanitize_text_field($newVal);

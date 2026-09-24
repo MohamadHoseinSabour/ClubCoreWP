@@ -64,10 +64,12 @@ class AssetManager
             'nonces' => [
                 'createMember' => wp_create_nonce('clubcore_create_member'),
                 'testSms' => wp_create_nonce('clubcore_test_sms'),
+                'checkSmsConnection' => wp_create_nonce('clubcore_check_sms_connection'),
                 'resendSms' => wp_create_nonce('clubcore_resend_sms'),
                 'import' => wp_create_nonce('clubcore_import'),
                 'saveSettings' => wp_create_nonce('clubcore_save_settings'),
             ],
+
             'i18n' => [
                 'loading' => __('در حال بارگذاری...', 'clubcore'),
                 'success' => __('عملیات با موفقیت انجام شد.', 'clubcore'),

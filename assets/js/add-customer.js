@@ -47,7 +47,7 @@
 
             var data = {
                 action: 'clubcore_create_member',
-                nonce: $('#clubcore_nonce').val(),
+                nonce: $('#clubcore_nonce').val() || (window.clubcoreAdmin && clubcoreAdmin.nonces ? clubcoreAdmin.nonces.createMember : ''),
                 phone: phone,
                 first_name: $('#clubcore-first-name').val(),
                 last_name: $('#clubcore-last-name').val(),

@@ -70,7 +70,10 @@ $timeout  = (int) get_option('clubcore_sms_timeout', 30);
     
     <p class="submit">
         <?php submit_button( __( 'ذخیره تنظیمات', 'clubcore' ), 'primary', 'submit', false ); ?>
-        <button type="button" class="button" id="clubcore-check-credit"><?php esc_html_e( 'بررسی موجودی اعتبار', 'clubcore' ); ?></button>
+        <button type="button" class="button button-secondary" id="clubcore-check-credit">
+            🔍 <?php esc_html_e( 'بررسی ارتباط و موجودی اعتبار', 'clubcore' ); ?>
+        </button>
+        <span id="clubcore-credit-result" style="margin-right: 12px; font-weight: 600; display: inline-block; vertical-align: middle;"></span>
     </p>
 </form>
 
@@ -79,19 +82,22 @@ $timeout  = (int) get_option('clubcore_sms_timeout', 30);
 <div class="clubcore-card" style="max-width: 600px;">
     <table class="form-table">
         <tr>
-            <th scope="row"><label for="test_phone"><?php esc_html_e( 'شماره موبایل', 'clubcore' ); ?></label></th>
-            <td><input type="tel" id="test_phone" class="regular-text ltr" dir="ltr" placeholder="09123456789"></td>
+            <th scope="row"><label for="clubcore-test-phone"><?php esc_html_e( 'شماره موبایل', 'clubcore' ); ?></label></th>
+            <td><input type="tel" id="clubcore-test-phone" name="test_phone" class="regular-text ltr" dir="ltr" placeholder="09123456789"></td>
         </tr>
         <tr>
-            <th scope="row"><label for="test_first_name"><?php esc_html_e( 'نام', 'clubcore' ); ?></label></th>
-            <td><input type="text" id="test_first_name" class="regular-text"></td>
+            <th scope="row"><label for="clubcore-test-fname"><?php esc_html_e( 'نام', 'clubcore' ); ?></label></th>
+            <td><input type="text" id="clubcore-test-fname" name="test_first_name" class="regular-text" placeholder="مثال: علی"></td>
         </tr>
         <tr>
-            <th scope="row"><label for="test_last_name"><?php esc_html_e( 'نام خانوادگی', 'clubcore' ); ?></label></th>
-            <td><input type="text" id="test_last_name" class="regular-text"></td>
+            <th scope="row"><label for="clubcore-test-lname"><?php esc_html_e( 'نام خانوادگی', 'clubcore' ); ?></label></th>
+            <td><input type="text" id="clubcore-test-lname" name="test_last_name" class="regular-text" placeholder="مثال: محمدی"></td>
         </tr>
     </table>
     <p>
-        <button type="button" class="button button-secondary" id="clubcore-test-sms"><?php esc_html_e( 'ارسال پیامک آزمایشی', 'clubcore' ); ?></button>
+        <button type="button" class="button button-secondary" id="clubcore-test-sms-btn">
+            📨 <?php esc_html_e( 'ارسال پیامک آزمایشی', 'clubcore' ); ?>
+        </button>
     </p>
+    <div id="clubcore-test-sms-result" style="margin-top: 12px;"></div>
 </div>

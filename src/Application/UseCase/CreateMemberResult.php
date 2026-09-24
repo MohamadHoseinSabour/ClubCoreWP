@@ -11,7 +11,7 @@ use ClubCore\Domain\Entity\Member;
  *
  * @package ClubCore\Application\UseCase
  */
-readonly class CreateMemberResult
+class CreateMemberResult
 {
     /**
      * @param string      $status  Status of the operation (created, already_exists, validation_error, error).
@@ -21,11 +21,11 @@ readonly class CreateMemberResult
      * @param array       $errors  Array of error messages.
      */
     public function __construct(
-        public string $status,
-        public ?Member $member,
-        public ?int $userId,
-        public string $message,
-        public array $errors = []
+        public readonly string $status,
+        public readonly ?Member $member,
+        public readonly ?int $userId,
+        public readonly string $message,
+        public readonly array $errors = []
     ) {
     }
 }

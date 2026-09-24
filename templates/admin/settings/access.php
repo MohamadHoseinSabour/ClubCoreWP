@@ -21,7 +21,7 @@ $guestMode = (string) get_option('clubcore_terminal_guest_mode', 'login_required
         ?>
 
         <h3 style="font-size: 16px; margin: 25px 0 10px; color: #1e293b;">
-            📱 <?php esc_html_e('دسترسی به صفحه دستگاه لمسی ثبت مشتری (کیوسک / موبایل)', 'clubcore'); ?>
+            <?php esc_html_e('دسترسی به صفحه دستگاه لمسی ثبت مشتری (کیوسک / موبایل)', 'clubcore'); ?>
         </h3>
         <p class="description" style="margin-bottom: 14px;">
             <?php esc_html_e('کاربران غیرمدیر (مانند مشترکین، مشتریان عادی ووکامرس یا مهمانان سایت) نباید بتوانند بدون اجازه به صفحه دستگاه ثبت مشتری دسترسی داشته باشند. در اینجا مشخص کنید چه نقش‌هایی مجاز به باز کردن این صفحه هستند:', 'clubcore'); ?>
