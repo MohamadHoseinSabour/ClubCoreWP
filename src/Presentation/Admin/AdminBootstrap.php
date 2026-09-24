@@ -143,12 +143,19 @@ class AdminBootstrap
      */
     public function handleSendTestSms(): void
     {
-        check_ajax_referer('clubcore_test_sms', 'nonce');
+        $nonceValid = check_ajax_referer('clubcore_test_sms', 'nonce', false)
+            || check_ajax_referer('clubcore_test_sms', '_ajax_nonce', false);
 
-        if (!current_user_can('clubcore_manage_settings')) {
+        if (!$nonceValid) {
+            wp_send_json_error([
+                'message' => __('اعتبار نشست امنیتی منقضی شده است. لطفاً صفحه را یک‌بار تازه‌سازی (F5) نموده و مجدداً تلاش کنید.', 'clubcore'),
+            ]);
+        }
+
+        if (!current_user_can('clubcore_manage_settings') && !current_user_can('manage_options')) {
             wp_send_json_error([
                 'message' => __('شما دسترسی انجام این عملیات را ندارید.', 'clubcore'),
-            ], 403);
+            ]);
         }
 
         $phone = sanitize_text_field(wp_unslash($_POST['phone'] ?? ''));
@@ -177,9 +184,9 @@ class AdminBootstrap
                     'error_type' => $result->errorType,
                 ]);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             wp_send_json_error([
-                'message' => __('خطا در ارسال پیامک آزمایشی.', 'clubcore'),
+                'message' => sprintf(__('خطا در ارسال پیامک آزمایشی: %s', 'clubcore'), $e->getMessage()),
             ]);
         }
     }
@@ -189,12 +196,19 @@ class AdminBootstrap
      */
     public function handleCheckSmsConnection(): void
     {
-        check_ajax_referer('clubcore_check_sms_connection', 'nonce');
+        $nonceValid = check_ajax_referer('clubcore_check_sms_connection', 'nonce', false)
+            || check_ajax_referer('clubcore_check_sms_connection', '_ajax_nonce', false);
 
-        if (!current_user_can('clubcore_manage_settings')) {
+        if (!$nonceValid) {
+            wp_send_json_error([
+                'message' => __('اعتبار نشست امنیتی منقضی شده است. لطفاً صفحه را تازه‌سازی (F5) کنید.', 'clubcore'),
+            ]);
+        }
+
+        if (!current_user_can('clubcore_manage_settings') && !current_user_can('manage_options')) {
             wp_send_json_error([
                 'message' => __('شما دسترسی انجام این عملیات را ندارید.', 'clubcore'),
-            ], 403);
+            ]);
         }
 
         try {
@@ -203,7 +217,7 @@ class AdminBootstrap
 
             if (!$provider->isConfigured()) {
                 wp_send_json_error([
-                    'message' => __('سرویس پیامک هنوز تنظیم نشده است. لطفاً نام کاربری/رمز یا توکن API را وارد کنید.', 'clubcore'),
+                    'message' => __('سرویس پیامک هنوز تنظیم نشده است. لطفاً نام کاربری/رمز یا توکن API را وارد نموده و تنظیمات را ذخیره کنید.', 'clubcore'),
                 ]);
             }
 
@@ -226,7 +240,7 @@ class AdminBootstrap
                     'provider' => $provider->getName(),
                 ]);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             wp_send_json_error([
                 'message' => sprintf(__('خطا در برقراری ارتباط با سرویس پیامک: %s', 'clubcore'), $e->getMessage()),
             ]);

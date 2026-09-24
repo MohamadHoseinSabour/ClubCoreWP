@@ -78,17 +78,27 @@
             $btn.prop('disabled', true).text(clubcoreAdmin.i18n.loading);
             $result.text('').css('color', '');
 
+            var checkNonce = $('#clubcore_check_sms_connection_nonce').val() || (window.clubcoreAdmin && clubcoreAdmin.nonces ? clubcoreAdmin.nonces.checkSmsConnection : '');
+
             $.post(clubcoreAdmin.ajaxUrl, {
                 action: 'clubcore_check_sms_connection',
-                nonce: clubcoreAdmin.nonces.checkSmsConnection
+                nonce: checkNonce
             }).done(function(res) {
                 if (res.success) {
                     $result.css('color', '#00a32a').text('✓ ' + res.data.message);
                 } else {
                     $result.css('color', '#d63638').text('✗ ' + (res.data.message || 'خطا در بررسی ارتباط'));
                 }
-            }).fail(function() {
-                $result.css('color', '#d63638').text('✗ خطای سرور رخ داد.');
+            }).fail(function(xhr) {
+                var msg = 'خطای سرور رخ داد.';
+                if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                    msg = xhr.responseJSON.data.message;
+                } else if (xhr.responseText === '-1') {
+                    msg = 'اعتبار نشست امنیتی (Nonce) منقضی شده است. لطفاً صفحه را تازه‌سازی (F5) کنید.';
+                } else if (xhr.status === 403) {
+                    msg = 'عدم دسترسی کافی یا انقضای نشست کاربری. لطفاً صفحه را تازه‌سازی کنید.';
+                }
+                $result.css('color', '#d63638').text('✗ ' + msg);
             }).always(function() {
                 $btn.prop('disabled', false).html('🔍 بررسی ارتباط و موجودی اعتبار');
             });
@@ -129,8 +139,16 @@
                 } else {
                     $res.html('<div class="clubcore-notice clubcore-notice-error" style="padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#b91c1c; margin-top:10px;">' + (res.data.message || 'خطا در ارسال پیامک آزمایشی') + '</div>');
                 }
-            }).fail(function() {
-                $res.html('<div class="clubcore-notice clubcore-notice-error" style="padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#b91c1c; margin-top:10px;">خطای سرور رخ داد.</div>');
+            }).fail(function(xhr) {
+                var msg = 'خطای سرور رخ داد.';
+                if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                    msg = xhr.responseJSON.data.message;
+                } else if (xhr.responseText === '-1') {
+                    msg = 'اعتبار نشست امنیتی منقضی شده است. لطفاً صفحه را یک‌بار تازه‌سازی (F5) کنید.';
+                } else if (xhr.status === 403) {
+                    msg = 'عدم دسترسی کافی یا انقضای نشست کاربری. لطفاً صفحه را تازه‌سازی کنید.';
+                }
+                $res.html('<div class="clubcore-notice clubcore-notice-error" style="padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#b91c1c; margin-top:10px;">' + msg + '</div>');
             }).always(function() {
                 $btn.prop('disabled', false).html('📨 ارسال پیامک آزمایشی');
             });

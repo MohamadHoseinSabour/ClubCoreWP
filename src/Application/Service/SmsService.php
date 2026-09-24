@@ -54,26 +54,38 @@ class SmsService
             $resolvedValues
         );
 
+        $statusStr = $result->isSuccess() ? 'sent' : 'failed';
+
         $this->logRepository->create([
-            'member_id'     => $memberId,
-            'phone'         => $phone,
-            'type'          => $requestType,
-            'status'        => $result->isSuccess() ? 'success' : 'failure',
-            'provider_id'   => $result->getProviderId(),
-            'error_message' => $result->getErrorMessage(),
-            'sent_at'       => current_time('mysql', true),
+            'member_id'              => $memberId,
+            'user_id'                => method_exists($member, 'getUserId') ? $member->getUserId() : 0,
+            'phone'                  => $phone,
+            'pattern_id'             => (string) $patternCode,
+            'provider'               => $this->provider->getName(),
+            'request_type'           => $requestType,
+            'status'                 => $statusStr,
+            'provider_reference'     => $result->getProviderId(),
+            'provider_error_code'    => $result->getProviderCode(),
+            'provider_error_message' => $result->getErrorMessage(),
         ]);
 
         if ($memberId > 0) {
-            update_user_meta($memberId, '_clubcore_last_sms_status', $result->isSuccess() ? 'success' : 'failure');
+            update_user_meta($memberId, '_clubcore_last_sms_status', $statusStr);
             update_user_meta($memberId, '_clubcore_last_sms_sent_at', current_time('mysql', true));
         }
 
-        $this->auditLogger->log('sms_sent', [
-            'member_id' => $memberId,
-            'type'      => $requestType,
-            'status'    => $result->isSuccess() ? 'success' : 'failure',
-        ]);
+        $this->auditLogger->log(
+            'sms_sent',
+            'member',
+            $memberId,
+            $result->isSuccess() ? 'success' : 'error',
+            wp_json_encode([
+                'phone'       => $phone,
+                'type'        => $requestType,
+                'provider_id' => $result->getProviderId(),
+                'error'       => $result->getErrorMessage(),
+            ]) ?: ''
+        );
 
         return $result;
     }
@@ -92,6 +104,7 @@ class SmsService
         $memberData = [
             'first_name' => $firstName,
             'last_name'  => $lastName,
+            'name'       => trim($firstName . ' ' . $lastName),
             'phone'      => $phone,
         ];
 
@@ -103,19 +116,32 @@ class SmsService
 
         $result = $this->provider->sendPattern($phone, $patternCode, $resolvedValues);
 
+        $statusStr = $result->isSuccess() ? 'sent' : 'failed';
+
         $this->logRepository->create([
-            'phone' => $phone,
-            'type' => 'test',
-            'status' => $result->isSuccess() ? 'success' : 'failure',
-            'provider_id' => $result->getProviderId(),
-            'error_message' => $result->getErrorMessage(),
-            'sent_at' => current_time('mysql', true),
+            'member_id'              => 0,
+            'user_id'                => 0,
+            'phone'                  => $phone,
+            'pattern_id'             => (string) $patternCode,
+            'provider'               => $this->provider->getName(),
+            'request_type'           => 'test',
+            'status'                 => $statusStr,
+            'provider_reference'     => $result->getProviderId(),
+            'provider_error_code'    => $result->getProviderCode(),
+            'provider_error_message' => $result->getErrorMessage(),
         ]);
 
-        $this->auditLogger->log('test_sms_sent', [
-            'phone' => $phone,
-            'status' => $result->isSuccess() ? 'success' : 'failure',
-        ]);
+        $this->auditLogger->log(
+            'test_sms_sent',
+            'sms',
+            0,
+            $result->isSuccess() ? 'success' : 'error',
+            wp_json_encode([
+                'phone'       => $phone,
+                'provider_id' => $result->getProviderId(),
+                'error'       => $result->getErrorMessage(),
+            ]) ?: ''
+        );
 
         return $result;
     }

@@ -68,6 +68,7 @@ $timeout  = (int) get_option('clubcore_sms_timeout', 30);
         </tr>
     </table>
     
+    <?php wp_nonce_field( 'clubcore_check_sms_connection', 'clubcore_check_sms_connection_nonce' ); ?>
     <p class="submit">
         <?php submit_button( __( 'ذخیره تنظیمات', 'clubcore' ), 'primary', 'submit', false ); ?>
         <button type="button" class="button button-secondary" id="clubcore-check-credit">
@@ -80,6 +81,7 @@ $timeout  = (int) get_option('clubcore_sms_timeout', 30);
 <hr>
 <h3><?php esc_html_e( 'تست ارسال پیامک', 'clubcore' ); ?></h3>
 <div class="clubcore-card" style="max-width: 600px;">
+    <?php wp_nonce_field( 'clubcore_test_sms', 'clubcore_test_sms_nonce' ); ?>
     <table class="form-table">
         <tr>
             <th scope="row"><label for="clubcore-test-phone"><?php esc_html_e( 'شماره موبایل', 'clubcore' ); ?></label></th>
